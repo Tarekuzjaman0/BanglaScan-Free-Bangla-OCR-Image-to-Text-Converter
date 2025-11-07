@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>প্রফেশনাল বাংলা OCR</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+
+    <style>
+        /* --- গ্লোবাল স্টাইল --- */
+        :root {
+            --material-blue: #3f51b5; /* Material Indigo */
+            --material-green: #4CAF50;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-light);
+            /* গ্লাসিজম এর জন্য একটি সুন্দর ব্যাকগ্রাউন্ড গ্রেডিয়েন্ট */
+            background: linear-gradient(120deg, #605C3C 0%, #3C6E71 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+        }
+
+        /* --- লেআউট --- */
+        .container {
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* --- গ্লাস কার্ড স্টাইল (Glassmorphism) --- */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.15); /* সাদা গ্লাসিজম */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px); /* Safari-এর জন্য */
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* --- Material UI কম্পোনেন্ট --- */
+        .material-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-decoration: none;
+        }
+        
+        .material-button .material-icons {
+            margin-right: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--material-blue);
+            color: var(--text-light);
+        }
+        .btn-primary:hover {
+            background-color: #303f9f;
+        }
+        .btn-primary:disabled {
+            background-color: #9e9e9e;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background-color: #ffffff;
+            color: var(--text-dark);
+        }
+        .btn-secondary:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* কাস্টম ফাইল ইনপুট */
+        input[type="file"] {
+            display: none;
+        }
+
+        #file-list {
+            margin: 15px 0;
+            font-size: 14px;
+            font-style: italic;
+        }
+
+        /* --- আউটপুট এবং স্ট্যাটাস --- */
+        #status-container {
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        /* CSS Loader */
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--text-light);
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+            display: none; /* শুরুতে হাইড থাকবে */
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #output {
+            width: 100%;
+            height: 350px;
+            border: none;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 15px;
+            font-size: 14px;
+            background-color: rgba(255, 255, 255, 0.8); /* টেক্সট সহজে পড়ার জন্য */
+            color: var(--text-dark);
+            resize: vertical;
+        }
+
+        /* --- রেস্পন্সিভ ডিজাইন --- */
+        @media (max-width: 600px) {
+            body {
+                padding: 20px 10px;
+            }
+            .glass-card {
+                padding: 16px;
+            }
+            .material-button {
+                width: 100%;
+            }
+            #processButton {
+                margin-top: 15px;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>
+            <span class="material-icons" style="font-size: 32px; vertical-align: bottom;">document_scanner</span>
+            প্রফেশনাল বাংলা OCR
+        </h1>
+
+        <div class="glass-card">
+            <h2>১. ইমেজ আপলোড করুন</h2>
+            <p style="margin: 10px 0 20px;">আপনার ৩০+ বাংলা ইমেজ ফাইল (.jpg, .png) সিলেক্ট করুন।</p>
+            
+            <label for="fileInput" class="material-button btn-secondary">
+                <span class="material-icons">add_photo_alternate</span>
+                ইমেজ সিলেক্ট করুন
+            </label>
+            <input type="file" id="fileInput" multiple accept="image/*">
+            
+            <div id="file-list">এখনও কোনো ফাইল সিলেক্ট করা হয়নি।</div>
+
+            <button id="processButton" class="material-button btn-primary" disabled>
+                <span class="material-icons">play_arrow</span>
+                কনভার্ট শুরু করুন
+            </button>
+        </div>
+
+        <div class="glass-card">
+            <h2>২. ফলাফল</h2>
+            
+            <div id="status-container">
+                <div class="loader" id="loader"></div>
+                <span id="status">কনভার্ট বাটনে ক্লিক করুন...</span>
+            </div>
+
+            <textarea id="output" placeholder="এখানে কনভার্ট করা টেক্সট দেখা যাবে..." readonly></textarea>
+        </div>
+
+    </div>
+
+    <script>
+        // DOM এলিমেন্টগুলো সিলেক্ট করা
+        const fileInput = document.getElementById('fileInput');
+        const processButton = document.getElementById('processButton');
+        const statusDiv = document.getElementById('status');
+        const outputTextarea = document.getElementById('output');
+        const fileListDiv = document.getElementById('file-list');
+        const loader = document.getElementById('loader');
+
+        // ফাইল ইনপুট পরিবর্তন হলে
+        fileInput.addEventListener('change', () => {
+            const files = fileInput.files;
+            if (files.length > 0) {
+                fileListDiv.textContent = `আপনি ${files.length} টি ফাইল সিলেক্ট করেছেন।`;
+                processButton.disabled = false; // বাটনটি সক্রিয় করা
+            } else {
+                fileListDiv.textContent = "এখনও কোনো ফাইল সিলেক্ট করা হয়নি।";
+                processButton.disabled = true; // বাটনটি নিষ্ক্রিয় করা
+            }
+        });
+
+        // "কনভার্ট" বাটনে ক্লিক করলে
+        processButton.addEventListener('click', async () => {
+            const files = fileInput.files;
+
+            if (files.length === 0) {
+                alert("অনুগ্রহ করে প্রথমে কিছু ইমেজ ফাইল সিলেক্ট করুন।");
+                return;
+            }
+
+            // UI আপডেট করা
+            processButton.disabled = true;
+            loader.style.display = 'block';
+            statusDiv.textContent = "প্রসেসিং শুরু হচ্ছে... (প্রথমবার লোড হতে সময় লাগবে)";
+            outputTextarea.value = ""; // আগের আউটপুট পরিষ্কার করা
+
+            const totalFiles = files.length;
+            
+            try {
+                // একটি একটি করে ফাইল প্রসেস করা
+                for (let i = 0; i < totalFiles; i++) {
+                    const file = files[i];
+                    statusDiv.textContent = `প্রসেস চলছে: ফাইল ${i + 1} / ${totalFiles} (${file.name})`;
+                    
+                    // Tesseract.js দিয়ে প্রসেস করা
+                    const { data: { text } } = await Tesseract.recognize(
+                        file,
+                        'ben', // বাংলা ভাষার জন্য 'ben'
+                        {
+                            logger: m => {
+                                // প্রোগ্রেস লগ (ব্রাউজার কনসোলে দেখা যাবে)
+                                console.log(m);
+                                if (m.status === 'recognizing text') {
+                                    const progress = (m.progress * 100).toFixed(0);
+                                    statusDiv.textContent = `প্রসেস চলছে: ফাইল ${i + 1} (${progress}%)`;
+                                }
+                            }
+                        }
+                    );
+                    
+                    // আউটপুট টেক্সটবক্সে যোগ করা
+                    outputTextarea.value += `--- ${file.name} থেকে প্রাপ্ত টেক্সট ---\n`;
+                    if (text.trim()) {
+                        outputTextarea.value += text + "\n\n";
+                    } else {
+                        outputTextarea.value += "[এই ছবিতে কোনো টেক্সট পাওয়া যায়নি]\n\n";
+                    }
+                    // টেক্সটবক্সের নিচে স্ক্রল করা
+                    outputTextarea.scrollTop = outputTextarea.scrollHeight;
+                }
+
+                statusDiv.textContent = `সম্পন্ন! মোট ${totalFiles} টি ফাইল প্রসেস করা হয়েছে।`;
+                statusDiv.style.color = 'var(--material-green)';
+
+            } catch (error) {
+                console.error(error);
+                statusDiv.textContent = "একটি ত্রুটি ঘটেছে। বিস্তারিত জানতে কনসোল দেখুন।";
+                statusDiv.style.color = '#ff0000'; // লাল রং
+            } finally {
+                // বাটন আবার সক্রিয় করা এবং লোডার হাইড করা
+                processButton.disabled = false;
+                loader.style.display = 'none';
+            }
+        });
+    </script>
+
+</body>
+</html>
