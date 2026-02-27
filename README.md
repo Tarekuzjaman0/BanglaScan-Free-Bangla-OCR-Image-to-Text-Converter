@@ -53,6 +53,8 @@
 
 এই প্রজেক্টটি [MIT License](LICENSE)-এর অধীনে লাইসেন্সপ্রাপ্ত।
 
-## 🙏 কৃতজ্ঞতা
+## 🙏 Thanks 
 
 * [Tesseract.js](https://github.com/naptha/tesseract.js) টিমের প্রতি, এমন একটি অসাধারণ ক্লায়েন্ট-সাইড OCR লাইব্রেরি তৈরির জন্য।
+
+
